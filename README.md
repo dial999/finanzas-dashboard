@@ -1,5 +1,13 @@
 # FINCTRL — Dashboard Financiero Personal
 
+<p align="center">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-2.6%20MX-10b981?style=flat-square" alt="Versión" />
+  <img src="https://img.shields.io/badge/stack-HTML5%20%7C%20TailwindCSS%20%7C%20Vanilla%20JS-3b82f6?style=flat-square" alt="Stack" />
+  <img src="https://img.shields.io/badge/database-LocalStorage%20%2B%20Supabase%20PostgreSQL-059669?style=flat-square" alt="Base de Datos" />
+  <img src="https://img.shields.io/badge/integraci%C3%B3n-Google%20Calendar%20API%20%26%20ICS-2563eb?style=flat-square" alt="Calendario" />
+  <img src="https://img.shields.io/badge/licencia-MIT-64748b?style=flat-square" alt="Licencia" />
+</p>
+
 > Aplicación web interactiva para el control de presupuesto, dispersión de nómina y programación de pagos personales, desarrollada con HTML5, Tailwind CSS, JavaScript moderno y persistencia en PostgreSQL (Supabase).
 
 Puedes abrir y ejecutar la aplicación directamente desde [index.html][app-entry] y consultar el esquema relacional de base de datos en [supabase_schema.sql][db-schema].

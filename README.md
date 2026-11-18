@@ -9,13 +9,14 @@
 
 > Aplicación web interactiva para el control de presupuesto, dispersión de nómina y programación de pagos personales, desarrollada con HTML5, Tailwind CSS, JavaScript moderno y persistencia en PostgreSQL (Supabase).
 
-Puedes ejecutar la aplicación web en vivo desde **[GitHub Pages (Live Demo)][live-demo]**, o bien consultar el código fuente principal en [index.html][app-entry] y el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
+Puedes ejecutar la aplicación web en vivo desde **[este enlace)][live-demo]**, o bien consultar el código fuente principal en [index.html][app-entry] y el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
 
 ## ¿En qué consiste el proyecto?
 
 **FINCTRL — Dashboard Financiero Personal** es una herramienta web de gestión financiera diseñada como una evolución moderna, visual e intuitiva de un archivo de control de presupuesto en Excel.
 
 A diferencia de las hojas de cálculo tradicionales que concentran decenas de columnas y fórmulas en una sola vista saturada, este proyecto implementa una arquitectura modular de tres pantallas con cálculos reactivos en tiempo real:
+
 - **Diseño adaptable al sistema y codificado por estatus**: La interfaz detecta automáticamente el esquema de color del sistema operativo (Modo Claro u Oscuro) y utiliza una codificación cromática consistente para distinguir montos en estatus `Pendiente` (Ámbar), `Apartado` (Azul) y `Pagado` (Verde Esmeralda).
 - **Tipografía optimizada para lectura financiera**: Combinación de `Inter` para jerarquía editorial y `JetBrains Mono` para cifras monetarias, porcentajes e indicadores de liquidez.
 - **Componentes financieros interactivos**: Motor de cálculo automático de salario neto mensual, selector dinámico de frecuencia de pago (`Semanal`, `Quincenal`, `Mensual`), tarjetas de liquidez por periodo, matriz de seguimiento por categorías y conectores para sincronización con **Supabase (PostgreSQL)** y **Google Calendar**.
@@ -23,27 +24,29 @@ A diferencia de las hojas de cálculo tradicionales que concentran decenas de co
 ## Propósito
 
 El objetivo principal de la aplicación es centralizar y simplificar la administración del ingreso mensual y los compromisos de pago personales, logrando que el usuario pueda:
+
 1. **Conocer su liquidez real por periodo**: Calcular automáticamente el ingreso neto disponible por semana (`S1–S4`), quincena (`Q1–Q2`) o mes (`M1`) a partir del salario bruto mensual de carta oferta (por defecto `$40,000 MXN`) o de un monto neto personalizado.
 2. **Controlar el flujo de efectivo en tiempo real**: Descontar automáticamente del saldo disponible únicamente aquellos conceptos cuyo estatus cambie a `Pagado` o `Apartado`, permitiendo visualizar cuánto dinero libre queda en cada semana.
-3. **Clasificar egresos, ahorro e ingresos extras**: Organizar cada movimiento dentro de categorías claras (*Gastos Fijos Obligatorios*, *Ahorro / Inversión*, *Gustos / Ocio*, *Ingresos Extras* y *Otros* personalizados).
+3. **Clasificar egresos, ahorro e ingresos extras**: Organizar cada movimiento dentro de categorías claras (_Gastos Fijos Obligatorios_, _Ahorro / Inversión_, _Gustos / Ocio_, _Ingresos Extras_ y _Otros_ personalizados).
 4. **Respaldar y sincronizar su historial mensual**: Conservar el registro histórico de cada mes tanto de manera local (`localStorage`) como en una base de datos relacional en la nube (`Supabase` / `DBeaver`) y en su calendario personal (`Google Calendar`).
 
 ## Organización de la Aplicación
 
 La interfaz está estructurada en **3 pantallas principales** accesibles desde la barra de navegación superior, separando la visualización ejecutiva, la operación semanal de pagos y la configuración técnica:
 
-| Pantalla 1: Resumen (`screen-dashboard`) | Pantalla 2: Cronograma (`screen-schedule`) | Pantalla 3: Nómina y Ajustes (`screen-payroll`) |
-| :--- | :--- | :--- |
-| **01.** Tarjeta KPI de Ingresos Netos del Mes | **05.** Selector de Enfoque por Semana (`Todos`, `S1–S4`) | **09.** Calculadora de Salario Bruto a Neto Mensual |
-| **02.** Tarjeta KPI de Total Gastado y Apartado | **06.** Filtro por Categoría Principal y Subconceptos | **10.** Selector de Frecuencia (`Semanal`, `Quincenal`, `Mensual`) |
-| **03.** Tarjeta KPI de Ahorro e Inversión (`%`) | **07.** Matriz Editable de Montos y Estatus de Pago | **11.** Configuración de Regla de Descuento y Tema Visual |
-| **04.** Tarjetas de Liquidez por Periodo y Barras de Avance | **08.** Acciones de Agendado en Google Calendar (`.ics` / URL) | **12.** Conexión con Supabase (PostgreSQL) y Exportación CSV/JSON |
+| Pantalla 1: Resumen (`screen-dashboard`)                    | Pantalla 2: Cronograma (`screen-schedule`)                     | Pantalla 3: Nómina y Ajustes (`screen-payroll`)                    |
+| :---------------------------------------------------------- | :------------------------------------------------------------- | :----------------------------------------------------------------- |
+| **01.** Tarjeta KPI de Ingresos Netos del Mes               | **05.** Selector de Enfoque por Semana (`Todos`, `S1–S4`)      | **09.** Calculadora de Salario Bruto a Neto Mensual                |
+| **02.** Tarjeta KPI de Total Gastado y Apartado             | **06.** Filtro por Categoría Principal y Subconceptos          | **10.** Selector de Frecuencia (`Semanal`, `Quincenal`, `Mensual`) |
+| **03.** Tarjeta KPI de Ahorro e Inversión (`%`)             | **07.** Matriz Editable de Montos y Estatus de Pago            | **11.** Configuración de Regla de Descuento y Tema Visual          |
+| **04.** Tarjetas de Liquidez por Periodo y Barras de Avance | **08.** Acciones de Agendado en Google Calendar (`.ics` / URL) | **12.** Conexión con Supabase (PostgreSQL) y Exportación CSV/JSON  |
 
 - **Esquema SQL (`supabase_schema.sql`)**: Incluye la definición de las tablas `finctrl_backups` y `finctrl_concepts` junto con sus políticas de seguridad (Row Level Security) para sincronizar y consultar los datos desde **DBeaver** o el panel de **Supabase**.
 
 ### Flujo de operación de cada periodo
 
 Cada mes presupuestado dentro de la aplicación sigue un ciclo de control consistente:
+
 1. **Configuración de Base Mensual**: Definición del salario bruto o neto mensual y elección de la frecuencia de dispersión (`Semanal`, `Quincenal` o `Mensual`).
 2. **Registro de Conceptos y Subconceptos**: Alta de compromisos de pago o ahorro dentro de su categoría correspondiente, eligiendo si el monto se asigna a una semana específica, se repite o se divide entre los periodos.
 3. **Seguimiento de Estatus (`Pendiente` → `Apartado` → `Pagado`)**: Actualización del estado de cada subconcepto conforme transcurren las semanas del mes.
@@ -52,8 +55,8 @@ Cada mes presupuestado dentro de la aplicación sigue un ciclo de control consis
 
 ## Información Técnica y Arquitectura
 
-- **Arquitectura Frontend (*Zero-Build SPA*)**: Aplicación de página única contenida en [index.html][app-entry], construida con HTML5 semántico, **Tailwind CSS** (configurado con detección de tema del sistema mediante `matchMedia('(prefers-color-scheme: dark)')`) y **JavaScript ES6+** puro. No requiere compiladores ni servidores intermedios para ejecutarse.
-- **Persistencia Híbrida (*Offline-First + Cloud PostgreSQL*)**:
+- **Arquitectura Frontend (_Zero-Build SPA_)**: Aplicación de página única contenida en [index.html][app-entry], construida con HTML5 semántico, **Tailwind CSS** (configurado con detección de tema del sistema mediante `matchMedia('(prefers-color-scheme: dark)')`) y **JavaScript ES6+** puro. No requiere compiladores ni servidores intermedios para ejecutarse.
+- **Persistencia Híbrida (_Offline-First + Cloud PostgreSQL_)**:
   - **Nivel Local**: Todos los cambios se serializan instantáneamente en `localStorage` bajo la clave `FINCTRL_DASHBOARD_STATE_V3`, garantizando disponibilidad sin conexión.
   - **Nivel Cloud (Supabase)**: Integración con `@supabase/supabase-js@2` que sincroniza una instantánea completa en `public.finctrl_backups` (formato `JSONB`) y desglosa cada fila por mes y periodo (`s1` a `s4`) en `public.finctrl_concepts` para facilitar consultas analíticas en SQL desde **DBeaver**.
 - **Integración con Google Calendar**:

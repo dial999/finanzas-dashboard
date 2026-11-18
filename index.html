@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FINCTRL // Dashboard Financiero Personal</title>
+  <title>Mis Finanzas — Control de Presupuesto Personal</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter & JetBrains Mono -->
@@ -72,28 +72,27 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
       
       <!-- Brand -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 shrink-0">
         <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <i data-lucide="wallet-cards" class="w-5 h-5"></i>
         </div>
-        <div>
-          <span class="font-mono font-bold tracking-tight text-sm sm:text-base text-slate-900 dark:text-zinc-100">FINCTRL</span>
-          <span class="hidden sm:inline-block ml-2 text-xs text-slate-500 dark:text-zinc-400">Finanzas Personales</span>
+        <div class="whitespace-nowrap">
+          <span class="font-bold tracking-tight text-sm sm:text-base text-slate-900 dark:text-zinc-100">Mis Finanzas</span>
         </div>
       </div>
 
       <!-- Main Screen Tabs (3 Clear Screens) -->
-      <nav class="flex items-center bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200/70 dark:border-zinc-800" id="mainNavTabs">
-        <button data-screen="dashboard" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+      <nav class="flex items-center bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200/70 dark:border-zinc-800 shrink-0" id="mainNavTabs">
+        <button data-screen="dashboard" class="nav-tab whitespace-nowrap flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i>
           <span>Resumen</span>
         </button>
-        <button data-screen="schedule" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
-          <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+        <button data-screen="schedule" class="nav-tab whitespace-nowrap flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="calendar-check-2" class="w-4 h-4 shrink-0"></i>
           <span>Cronograma</span>
         </button>
-        <button data-screen="payroll" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
-          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+        <button data-screen="payroll" class="nav-tab whitespace-nowrap flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4 shrink-0"></i>
           <span>Nómina & Ajustes</span>
         </button>
       </nav>
@@ -404,17 +403,20 @@
             </div>
           </div>
 
-          <!-- Net Salary Box (Clean without ISR/IMSS noise) -->
+          <!-- Net Salary Box (Adapts dynamically to Semanal / Quincenal / Mensual) -->
           <div class="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200/70 dark:border-zinc-800/80 rounded-xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-sm font-semibold text-slate-800 dark:text-zinc-200">Salario Neto Mensual Aproximado</span>
-              <span id="netMonthlyText" class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">$31,548.00</span>
+              <span id="netPeriodTitleLabel" class="text-sm font-semibold text-slate-800 dark:text-zinc-200">Salario Neto Semanal Aproximado</span>
+              <span id="netMonthlyText" class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">$7,887.00</span>
             </div>
 
             <!-- Optional manual net override -->
             <div class="pt-2 border-t border-slate-200/60 dark:border-zinc-800/60 flex items-center justify-between gap-2">
-              <span class="text-xs text-slate-500 dark:text-zinc-400">¿Prefieres escribir tu neto exacto?</span>
-              <input id="manualNetInput" type="number" placeholder="Automático" class="w-36 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-emerald-300 focus:outline-none focus:border-emerald-500" />
+              <span id="manualNetPromptLabel" class="text-xs text-slate-500 dark:text-zinc-400">¿Prefieres escribir tu neto semanal exacto?</span>
+              <div class="flex items-center gap-1.5">
+                <input id="manualNetInput" type="number" placeholder="Automático" class="w-32 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-emerald-300 focus:outline-none focus:border-emerald-500" />
+                <button id="clearManualNetBtn" type="button" class="hidden text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-200/70 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-300 dark:hover:bg-zinc-700 transition" title="Volver al cálculo automático">Auto</button>
+              </div>
             </div>
           </div>
 
@@ -756,22 +758,24 @@
       { lower: 375975.62, upper: Infinity,  fixed: 117912.32, rate: 0.3500 }
     ];
 
-    function calculateMexicanNetSalary(grossMonthly, manualNetOverride = null) {
+    function calculateMexicanNetSalary(grossMonthly, manualNetOverride = null, periodCount = 1) {
       const gross = Math.max(0, Number(grossMonthly) || 0);
-      if (gross === 0) return { gross: 0, isr: 0, imss: 0, net: 0, effectiveRate: 0 };
+      if (gross === 0 && !manualNetOverride) return { gross: 0, isr: 0, imss: 0, net: 0, netPerPeriod: 0, effectiveRate: 0 };
       const bracket = ISR_MONTHLY_TABLE_MX.find(b => gross >= b.lower && gross <= b.upper) || ISR_MONTHLY_TABLE_MX[ISR_MONTHLY_TABLE_MX.length - 1];
       const isr = bracket.fixed + (Math.max(0, gross - bracket.lower) * bracket.rate);
       const imss = gross * 0.0275;
-      const computedNet = Math.max(0, gross - isr - imss);
-      const finalNet = (manualNetOverride !== null && manualNetOverride !== '' && !isNaN(manualNetOverride))
-        ? Number(manualNetOverride)
-        : computedNet;
+      const computedMonthlyNet = Math.max(0, gross - isr - imss);
+      const hasManual = manualNetOverride !== null && manualNetOverride !== '' && !isNaN(manualNetOverride) && Number(manualNetOverride) > 0;
+      const finalMonthlyNet = hasManual
+        ? Number(manualNetOverride) * periodCount
+        : computedMonthlyNet;
       return {
         gross,
         isr,
         imss,
-        net: finalNet,
-        effectiveRate: ((isr / gross) * 100).toFixed(1)
+        net: finalMonthlyNet,
+        netPerPeriod: finalMonthlyNet / periodCount,
+        effectiveRate: gross > 0 ? ((isr / gross) * 100).toFixed(1) : 0
       };
     }
 
@@ -791,11 +795,18 @@
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
+          const parsed = JSON.parse(saved);
+          // Fix legacy unscaled weekly manual override if user switched to mensual/quincenal
+          if (parsed.manualNetMonthly && Number(parsed.manualNetMonthly) === 8000 && parsed.frequency === 'mensual') {
+            parsed.manualNetMonthly = '32000';
+          } else if (parsed.manualNetMonthly && Number(parsed.manualNetMonthly) === 8000 && parsed.frequency === 'quincenal') {
+            parsed.manualNetMonthly = '16000';
+          }
           return {
             activeScreen: 'dashboard',
             focusedPeriod: 'ALL',
             theme: 'system',
-            ...JSON.parse(saved)
+            ...parsed
           };
         } catch (e) {
           console.error(e);
@@ -856,6 +867,8 @@
           labels: ['Semana 1 (S1)', 'Semana 2 (S2)', 'Semana 3 (S3)', 'Semana 4 (S4)'],
           shortLabels: ['S1', 'S2', 'S3', 'S4'],
           unitName: 'semana',
+          adjective: 'Semanal',
+          adjectiveLower: 'semanal',
           badge: 'Frecuencia Semanal'
         };
       }
@@ -865,6 +878,8 @@
           labels: ['Quincena 1 (Q1)', 'Quincena 2 (Q2)'],
           shortLabels: ['Q1', 'Q2'],
           unitName: 'quincena',
+          adjective: 'Quincenal',
+          adjectiveLower: 'quincenal',
           badge: 'Frecuencia Quincenal'
         };
       }
@@ -873,6 +888,8 @@
         labels: ['Mes Completo (M1)'],
         shortLabels: ['M1'],
         unitName: 'mes',
+        adjective: 'Mensual',
+        adjectiveLower: 'mensual',
         badge: 'Frecuencia Mensual'
       };
     }
@@ -929,7 +946,7 @@
 
       document.querySelectorAll('.nav-tab').forEach(btn => {
         const isActive = btn.dataset.screen === screenName;
-        btn.className = `nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
+        btn.className = `nav-tab whitespace-nowrap flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
           isActive
             ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold'
             : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
@@ -943,8 +960,8 @@
       applyTheme(state.theme || 'system');
       switchScreen(state.activeScreen || 'dashboard');
 
-      const payroll = calculateMexicanNetSalary(state.grossMonthly, state.manualNetMonthly);
       const periodCfg = getPeriodConfig(state.frequency);
+      const payroll = calculateMexicanNetSalary(state.grossMonthly, state.manualNetMonthly, periodCfg.count);
       if (state.focusedPeriod !== 'ALL' && Number(state.focusedPeriod) >= periodCfg.count) {
         state.focusedPeriod = 'ALL';
       }
@@ -971,7 +988,14 @@
       const manualInput = document.getElementById('manualNetInput');
       if (document.activeElement !== manualInput) manualInput.value = state.manualNetMonthly || '';
 
-      document.getElementById('netMonthlyText').textContent = currencyFmtDecimals.format(payroll.net);
+      const clearManualBtn = document.getElementById('clearManualNetBtn');
+      if (clearManualBtn) {
+        clearManualBtn.classList.toggle('hidden', !state.manualNetMonthly);
+      }
+
+      document.getElementById('netPeriodTitleLabel').textContent = `Salario Neto ${periodCfg.adjective} Aproximado`;
+      document.getElementById('manualNetPromptLabel').textContent = `¿Prefieres escribir tu neto ${periodCfg.adjectiveLower} exacto?`;
+      document.getElementById('netMonthlyText').textContent = currencyFmtDecimals.format(payroll.netPerPeriod);
 
       document.querySelectorAll('.freq-btn').forEach(btn => {
         const isSelected = btn.dataset.freq === state.frequency;
@@ -1841,10 +1865,27 @@
       renderAll();
     });
 
+    document.getElementById('clearManualNetBtn').addEventListener('click', () => {
+      state.manualNetMonthly = '';
+      renderAll();
+    });
+
     document.getElementById('frequencyGroup').addEventListener('click', (e) => {
       const btn = e.target.closest('.freq-btn');
       if (!btn) return;
-      state.frequency = btn.dataset.freq;
+      const oldFreq = state.frequency;
+      const newFreq = btn.dataset.freq;
+      if (oldFreq === newFreq) return;
+
+      // Scale manual net amount proportionally when switching between Semanal (4), Quincenal (2), Mensual (1)
+      if (state.manualNetMonthly !== '' && !isNaN(state.manualNetMonthly) && Number(state.manualNetMonthly) > 0) {
+        const oldCount = getPeriodConfig(oldFreq).count;
+        const newCount = getPeriodConfig(newFreq).count;
+        const monthlyEquivalent = Number(state.manualNetMonthly) * oldCount;
+        state.manualNetMonthly = String(Math.round(monthlyEquivalent / newCount));
+      }
+
+      state.frequency = newFreq;
       state.focusedPeriod = 'ALL';
       renderAll();
     });

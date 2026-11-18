@@ -9,7 +9,7 @@
 
 > Aplicación web interactiva para el control de presupuesto, dispersión de nómina y programación de pagos personales, desarrollada con HTML5, Tailwind CSS, JavaScript moderno y persistencia en PostgreSQL (Supabase).
 
-Puedes ejecutar la aplicación web en vivo desde **[este enlace)][live-demo]**, o bien consultar el código fuente principal en [index.html][app-entry] y el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
+Puedes ejecutar la aplicación web en vivo desde **[este enlace][live-demo]**, o bien consultar el código fuente principal en [index.html][app-entry] y el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
 
 ## ¿En qué consiste el proyecto?
 

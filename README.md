@@ -1,4 +1,4 @@
-# FINCTRL — Dashboard Financiero Personal
+# Mis Finanzas — Dashboard Financiero Personal
 
 <p align="center">
   <img src="https://img.shields.io/badge/versi%C3%B3n-2.6%20MX-10b981?style=flat-square" alt="Versión" />
@@ -13,7 +13,7 @@ Puedes ejecutar la aplicación web en vivo desde **[este enlace][live-demo]**, o
 
 ## ¿En qué consiste el proyecto?
 
-**FINCTRL — Dashboard Financiero Personal** es una herramienta web de gestión financiera diseñada como una evolución moderna, visual e intuitiva de un archivo de control de presupuesto en Excel.
+**Mis Finanzas — Dashboard Financiero Personal** es una herramienta web de gestión financiera diseñada como una evolución moderna, visual e intuitiva de un archivo de control de presupuesto en Excel.
 
 A diferencia de las hojas de cálculo tradicionales que concentran decenas de columnas y fórmulas en una sola vista saturada, este proyecto implementa una arquitectura modular de tres pantallas con cálculos reactivos en tiempo real:
 

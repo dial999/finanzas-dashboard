@@ -9,7 +9,7 @@
 
 > Aplicación web interactiva para el control de presupuesto, dispersión de nómina y programación de pagos personales, desarrollada con HTML5, Tailwind CSS, JavaScript moderno y persistencia en PostgreSQL (Supabase).
 
-Puedes abrir y ejecutar la aplicación directamente desde [index.html][app-entry] y consultar el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
+Puedes ejecutar la aplicación web en vivo desde **[GitHub Pages (Live Demo)][live-demo]**, o bien consultar el código fuente principal en [index.html][app-entry] y el esquema relacional de base de datos en [supabase_schema.sql][db-schema].
 
 ## ¿En qué consiste el proyecto?
 
@@ -103,5 +103,6 @@ Invoke-Item .\index.html
 
 ---
 
+[live-demo]: https://dial999.github.io/finanzas-dashboard/
 [app-entry]: index.html
 [db-schema]: supabase_schema.sql

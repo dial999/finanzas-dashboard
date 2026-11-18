@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FINCTRL // Dashboard Financiero Personal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS SDK v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Identity Services (for optional direct Google Calendar API OAuth) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            zinc: {
+              850: '#1f2023',
+              925: '#141518',
+              950: '#0b0c0e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth theme transitions */
+    body {
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased bg-slate-50 text-slate-900 dark:bg-zinc-950 dark:text-zinc-100 selection:bg-emerald-500/20 selection:text-emerald-600 dark:selection:text-emerald-300">
+
+  <!-- TOP NAVIGATION BAR (CLEAN & MINIMAL) -->
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-mono font-bold tracking-tight text-sm sm:text-base text-slate-900 dark:text-zinc-100">FINCTRL</span>
+          <span class="hidden sm:inline-block ml-2 text-xs text-slate-500 dark:text-zinc-400">Finanzas Personales</span>
+        </div>
+      </div>
+
+      <!-- Main Screen Tabs (3 Clear Screens) -->
+      <nav class="flex items-center bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200/70 dark:border-zinc-800" id="mainNavTabs">
+        <button data-screen="dashboard" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Resumen</span>
+        </button>
+        <button data-screen="schedule" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+          <span>Cronograma</span>
+        </button>
+        <button data-screen="payroll" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          <span>Nómina & Ajustes</span>
+        </button>
+      </nav>
+
+      <!-- Month Picker & System Theme Indicator -->
+      <div class="flex items-center gap-2">
+        <!-- Month Selector -->
+        <div class="flex items-center bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-xl p-0.5">
+          <button id="prevMonthBtn" class="p-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded-lg text-slate-500 dark:text-zinc-400 transition" title="Mes anterior">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <select id="monthSelector" class="bg-transparent font-medium text-xs sm:text-sm text-slate-800 dark:text-zinc-200 px-2 py-1 focus:outline-none cursor-pointer">
+            <option value="2026-11" class="bg-white dark:bg-zinc-900">Noviembre 2026</option>
+            <option value="2026-12" class="bg-white dark:bg-zinc-900">Diciembre 2026</option>
+            <option value="2027-01" class="bg-white dark:bg-zinc-900">Enero 2027</option>
+            <option value="2027-02" class="bg-white dark:bg-zinc-900">Febrero 2027</option>
+            <option value="2027-03" class="bg-white dark:bg-zinc-900">Marzo 2027</option>
+            <option value="2027-04" class="bg-white dark:bg-zinc-900">Abril 2027</option>
+            <option value="2027-05" class="bg-white dark:bg-zinc-900">Mayo 2027</option>
+            <option value="2027-06" class="bg-white dark:bg-zinc-900">Junio 2027</option>
+            <option value="2027-07" class="bg-white dark:bg-zinc-900">Julio 2027</option>
+            <option value="2027-08" class="bg-white dark:bg-zinc-900">Agosto 2027</option>
+            <option value="2027-09" class="bg-white dark:bg-zinc-900">Septiembre 2027</option>
+            <option value="2027-10" class="bg-white dark:bg-zinc-900">Octubre 2027</option>
+            <option value="2027-11" class="bg-white dark:bg-zinc-900">Noviembre 2027</option>
+            <option value="2027-12" class="bg-white dark:bg-zinc-900">Diciembre 2027</option>
+          </select>
+          <button id="nextMonthBtn" class="p-1.5 hover:bg-white dark:hover:bg-zinc-800 rounded-lg text-slate-500 dark:text-zinc-400 transition" title="Mes siguiente">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Cloud Sync Status Pill -->
+        <button id="cloudStatusBtn" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-xs font-mono text-slate-600 dark:text-zinc-400 hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition" title="Estado de sincronización con Supabase">
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="cloudStatusText">Local</span>
+        </button>
+
+        <!-- Theme Selector (Defaults to Auto/System) -->
+        <button id="themeCycleBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition flex items-center gap-1.5 text-xs font-mono" title="Tema: Automático según tu sistema (haz clic para alternar)">
+          <i id="themeIcon" data-lucide="monitor" class="w-4 h-4"></i>
+          <span id="themeLabel" class="hidden md:inline">Auto</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 1: RESUMEN EJECUTIVO (VISTA LIMPIA Y DESPEJADA)            -->
+    <!-- =================================================================== -->
+    <section id="screen-dashboard" class="space-y-8">
+      
+      <!-- Top Hero Banner -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span id="heroFrequencyBadge" class="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+            Frecuencia Semanal
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mt-2 text-slate-900 dark:text-white">
+            Resumen Financiero
+          </h1>
+          <p id="heroSalarySummary" class="text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+            Aproximadamente $10,000 MXN brutos / ~$7,887 MXN netos por semana
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button id="goToScheduleBtn" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 text-slate-700 dark:text-zinc-200 shadow-sm transition flex items-center gap-2">
+            <i data-lucide="table-2" class="w-4 h-4 text-emerald-500"></i>
+            <span>Ver Cronograma</span>
+          </button>
+          <button class="open-add-modal-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Nuevo Concepto</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Clean KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Card 1: Ingresos Netos -->
+        <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/90 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
+            <span class="text-xs font-medium">Ingresos Netos</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <i data-lucide="wallet" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div id="kpiTotalIncome" class="font-mono text-2xl font-bold text-slate-900 dark:text-white">$31,548</div>
+          <div id="kpiExtraIncomeSub" class="text-xs text-slate-500 dark:text-zinc-400 mt-1.5">Base nómina mensual neta</div>
+        </div>
+
+        <!-- Card 2: Total Gastado -->
+        <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/90 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
+            <span class="text-xs font-medium">Total Gastado / Apartado</span>
+            <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+              <i data-lucide="arrow-down-right" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div id="kpiTotalSpent" class="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">$0</div>
+          <div id="kpiPlannedSpentSub" class="text-xs text-slate-500 dark:text-zinc-400 mt-1.5">de $0 planeados</div>
+        </div>
+
+        <!-- Card 3: Total Ahorrado -->
+        <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/90 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 dark:text-zinc-400 mb-3">
+            <span class="text-xs font-medium">Ahorro & Inversión</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+              <i data-lucide="piggy-bank" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div id="kpiTotalSaved" class="font-mono text-2xl font-bold text-blue-600 dark:text-blue-400">$0</div>
+          <div id="kpiSavedRateSub" class="text-xs text-slate-500 dark:text-zinc-400 mt-1.5">0% del ingreso neto</div>
+        </div>
+
+        <!-- Card 4: Saldo Disponible -->
+        <div class="bg-emerald-50/70 dark:bg-emerald-950/25 border border-emerald-500/30 dark:border-emerald-500/40 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between text-emerald-800 dark:text-emerald-300 mb-3">
+            <span class="text-xs font-semibold">Saldo Disponible</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div id="kpiAvailableBalance" class="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400">$31,548</div>
+          <div id="kpiPendingSub" class="text-xs text-amber-600 dark:text-amber-400 mt-1.5">$0 pendientes por pagar</div>
+        </div>
+      </div>
+
+      <!-- Clean Two-Column Layout: Period Balances + Budget Execution -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left 7 cols: Saldo Disponible por Semana / Periodo -->
+        <div class="lg:col-span-7 bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Saldo por Periodo</h2>
+              <p class="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">Haz clic en cualquier periodo para abrir su cronograma</p>
+            </div>
+            <span id="periodModeHelperText" class="text-xs font-mono text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg">4 Semanas</span>
+          </div>
+
+          <div id="periodSummaryCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Right 5 cols: Avance del Presupuesto por Categoría -->
+        <div class="lg:col-span-5 bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Ejecución del Mes</h2>
+              <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Pagado</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span>Apartado</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Pendiente</span>
+              </div>
+            </div>
+
+            <!-- Overall Progress Bar -->
+            <div>
+              <div class="flex justify-between text-xs font-mono text-slate-600 dark:text-zinc-300 mb-2">
+                <span id="executionPercentText">0% ejecutado</span>
+                <span id="budgetedPercentText" class="text-slate-400 dark:text-zinc-500">0% planeado</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                <div id="barPaid" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                <div id="barReserved" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+                <div id="barPending" class="bg-amber-400 h-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Category Breakdown List -->
+            <div id="categoryBarsContainer" class="space-y-3.5 pt-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
+            <span>Regla activa de descuento:</span>
+            <span id="dashboardRuleBadge" class="font-mono font-medium text-slate-700 dark:text-zinc-300">Pagado + Apartado</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 2: CRONOGRAMA INTERACTIVO DE PAGOS (SIN SATURACIÓN)        -->
+    <!-- =================================================================== -->
+    <section id="screen-schedule" class="hidden space-y-6">
+      
+      <!-- Header & Filters -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Cronograma de Pagos</h1>
+          <p class="text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+            Cambia cualquier estatus a <span class="text-emerald-600 dark:text-emerald-400 font-medium">Pagado</span> o <span class="text-blue-600 dark:text-blue-400 font-medium">Apartado</span> para descontarlo del saldo disponible.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Period Focus Selector (All periods or single week so table isn't crowded!) -->
+          <div id="periodFocusPills" class="flex items-center bg-slate-200/70 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-mono">
+            <!-- Populated dynamically: [Todos] [S1] [S2] [S3] [S4] -->
+          </div>
+
+          <!-- Category Filter -->
+          <select id="categoryFilter" class="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs sm:text-sm text-slate-700 dark:text-zinc-200 rounded-xl px-3 py-2 focus:outline-none shadow-sm">
+            <option value="ALL">Todas las categorías</option>
+            <option value="Gastos Fijos Obligatorios">Gastos Fijos Obligatorios</option>
+            <option value="Ahorro / Inversión">Ahorro / Inversión</option>
+            <option value="Gustos / Ocio">Gustos / Ocio</option>
+            <option value="Ingresos Extras">Ingresos Extras</option>
+            <option value="Otros">Otros Personalizados</option>
+          </select>
+
+          <button id="syncGCalToolbarBtn" class="flex items-center gap-1.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-blue-500/50 text-slate-700 dark:text-zinc-200 font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition" title="Exportar o sincronizar pagos de este mes con Google Calendar">
+            <i data-lucide="calendar-plus" class="w-4 h-4 text-blue-500"></i>
+            <span>Google Calendar</span>
+          </button>
+
+          <button class="open-add-modal-btn flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Agregar Concepto</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Clean Matrix Card -->
+      <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr id="matrixTableHead" class="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-950/50 text-xs font-medium text-slate-500 dark:text-zinc-400">
+                <!-- Populated dynamically -->
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody" class="divide-y divide-slate-100 dark:divide-zinc-800/60 text-sm">
+              <!-- Populated dynamically -->
+            </tbody>
+            <tfoot id="matrixTableFoot" class="bg-slate-50 dark:bg-zinc-950/70 border-t border-slate-200 dark:border-zinc-800 font-mono text-xs">
+              <!-- Populated dynamically -->
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA 3: NÓMINA & CONFIGURACIÓN (CALCULADORA Y DATOS)            -->
+    <!-- =================================================================== -->
+    <section id="screen-payroll" class="hidden space-y-8 max-w-4xl mx-auto">
+      
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Configuración de Nómina y Ajustes</h1>
+        <p class="text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+          Configura tu salario bruto mensual de carta oferta, frecuencia de pago y respaldos.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Calculadora de Nómina (7 cols) -->
+        <div class="md:col-span-7 bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <i data-lucide="calculator" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Cálculo de Nómina e Ingresos</h2>
+            </div>
+          </div>
+
+          <!-- Gross Salary Input -->
+          <div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-2">
+              Salario Bruto Mensual (Basado en tu Carta Oferta)
+            </label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-slate-400 text-base">$</span>
+              <input 
+                id="grossSalaryInput" 
+                type="number" 
+                step="500" 
+                min="0"
+                value="40000"
+                class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-8 pr-16 py-3 font-mono text-lg font-bold text-slate-900 dark:text-white focus:outline-none transition"
+              />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-slate-400">MXN</span>
+            </div>
+          </div>
+
+          <!-- Payment Frequency Selector -->
+          <div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-2">
+              Frecuencia de Pago
+            </label>
+            <div class="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-zinc-950 p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800" id="frequencyGroup">
+              <button data-freq="semanal" class="freq-btn py-2 px-3 rounded-lg text-xs sm:text-sm font-medium transition">Semanal</button>
+              <button data-freq="quincenal" class="freq-btn py-2 px-3 rounded-lg text-xs sm:text-sm font-medium transition">Quincenal</button>
+              <button data-freq="mensual" class="freq-btn py-2 px-3 rounded-lg text-xs sm:text-sm font-medium transition">Mensual</button>
+            </div>
+          </div>
+
+          <!-- Net Salary Box (Clean without ISR/IMSS noise) -->
+          <div class="bg-slate-50 dark:bg-zinc-950/80 border border-slate-200/70 dark:border-zinc-800/80 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-800 dark:text-zinc-200">Salario Neto Mensual Aproximado</span>
+              <span id="netMonthlyText" class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">$31,548.00</span>
+            </div>
+
+            <!-- Optional manual net override -->
+            <div class="pt-2 border-t border-slate-200/60 dark:border-zinc-800/60 flex items-center justify-between gap-2">
+              <span class="text-xs text-slate-500 dark:text-zinc-400">¿Prefieres escribir tu neto exacto?</span>
+              <input id="manualNetInput" type="number" placeholder="Automático" class="w-36 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-emerald-300 focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          <!-- Dynamic Result Box -->
+          <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start gap-3">
+            <i data-lucide="badge-dollar-sign" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"></i>
+            <div class="text-xs sm:text-sm leading-relaxed">
+              <span id="freqBadgeTitle" class="text-[11px] font-mono uppercase text-emerald-700 dark:text-emerald-300 font-semibold block">PAGO SEMANAL</span>
+              <p id="dynamicFrequencySummary" class="text-slate-800 dark:text-zinc-100 mt-0.5">
+                Aproximadamente <strong>$10,000 MXN</strong> brutos / <strong>~$7,887 MXN</strong> netos por semana
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reglas, Tema y Exportación (5 cols) -->
+        <div class="md:col-span-5 space-y-6">
+          
+          <!-- Regla de Descuento y Apariencia -->
+          <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm space-y-5">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Preferencias del Sistema</h2>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-2">
+                ¿Qué estatus descuentan del Saldo Disponible?
+              </label>
+              <select id="discountRuleSelect" class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-800 dark:text-zinc-200 focus:outline-none">
+                <option value="both">Descontar [Pagado] y [Apartado]</option>
+                <option value="paid_only">Descontar solo [Pagado]</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-2">
+                Tema de Color (Claro / Oscuro)
+              </label>
+              <div class="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-zinc-950 p-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-800" id="themeGroup">
+                <button data-theme="system" class="theme-opt-btn py-2 px-2 rounded-lg text-xs font-medium transition">Sistema</button>
+                <button data-theme="light" class="theme-opt-btn py-2 px-2 rounded-lg text-xs font-medium transition">Claro</button>
+                <button data-theme="dark" class="theme-opt-btn py-2 px-2 rounded-lg text-xs font-medium transition">Oscuro</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exportar y Respaldo -->
+          <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm space-y-4">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Datos y Exportación</h2>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+              Tus cambios se guardan automáticamente en este navegador (`localStorage`). También puedes descargar tu tabla para Excel.
+            </p>
+
+            <div class="space-y-2.5 pt-1">
+              <button id="exportCsvBtn" class="w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-100 py-2.5 px-4 rounded-xl transition">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
+                <span>Exportar Mes a Excel (CSV)</span>
+              </button>
+
+              <button id="exportJsonBtn" class="w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-100 py-2.5 px-4 rounded-xl transition">
+                <i data-lucide="download" class="w-4 h-4 text-blue-500"></i>
+                <span>Descargar Respaldo JSON</span>
+              </button>
+
+              <button id="resetDemoBtn" class="w-full flex items-center justify-center gap-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 py-2 px-4 rounded-xl transition">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span>Reiniciar todo en cero</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- SUPABASE DATABASE + GOOGLE CALENDAR INTEGRATION CARDS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+        
+        <!-- 1. SUPABASE CLOUD DATABASE -->
+        <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <i data-lucide="database" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Base de Datos Supabase</h2>
+                <p class="text-[11px] text-slate-500 dark:text-zinc-400">Sincronización en la nube por mes (PostgreSQL)</p>
+              </div>
+            </div>
+            <span id="supabasePanelStatusBadge" class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400">Sin conectar</span>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-1">Supabase Project URL</label>
+              <input
+                id="supabaseUrlInput"
+                type="url"
+                placeholder="https://xyzcompany.supabase.co"
+                class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 dark:text-zinc-200 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-1">Supabase Anon Public Key</label>
+              <input
+                id="supabaseKeyInput"
+                type="password"
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 dark:text-zinc-200 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="supabaseConnectBtn" class="col-span-2 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition">
+              <i data-lucide="cloud" class="w-4 h-4"></i>
+              <span>Conectar y Activar Auto-Guardado</span>
+            </button>
+            <button id="supabasePushBtn" class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs py-2 px-3 rounded-xl transition">
+              <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-emerald-500"></i>
+              <span>Subir a Nube</span>
+            </button>
+            <button id="supabasePullBtn" class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs py-2 px-3 rounded-xl transition">
+              <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-blue-500"></i>
+              <span>Traer de Nube</span>
+            </button>
+          </div>
+
+          <p id="supabaseFeedbackMsg" class="text-[11px] font-mono text-slate-400 dark:text-zinc-500">
+            Ejecuta primero el archivo <code class="text-emerald-600 dark:text-emerald-400">supabase_schema.sql</code> en el SQL Editor de tu proyecto Supabase.
+          </p>
+        </div>
+
+        <!-- 2. GOOGLE CALENDAR INTEGRATION -->
+        <div class="bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800/90 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3.5">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <i data-lucide="calendar" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900 dark:text-white">Google Calendar Sync</h2>
+                  <p class="text-[11px] text-slate-500 dark:text-zinc-400">Recordatorios por semana/mes ($0 MXN gratis)</p>
+                </div>
+              </div>
+              <span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">Gratis</span>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+              Puedes agendar cualquier pago individual haciendo clic en el ícono <strong class="text-slate-700 dark:text-zinc-200">📅</strong> en tu Cronograma, descargar el calendario completo del mes (<code class="font-mono">.ics</code>), o conectar la API directa de Google Calendar:
+            </p>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-zinc-300 mb-1">Google OAuth Client ID (Opcional para API directa)</label>
+              <input
+                id="googleClientIdInput"
+                type="text"
+                placeholder="1234567890-abc.apps.googleusercontent.com"
+                class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 dark:text-zinc-200 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <button id="downloadIcsMonthBtn" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition">
+              <i data-lucide="calendar-check" class="w-4 h-4"></i>
+              <span>Descargar Calendario del Mes (.ics para Google Calendar)</span>
+            </button>
+
+            <button id="googleApiSyncBtn" class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs py-2 px-4 rounded-xl transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-500"></i>
+              <span>Sincronizar Directo con Google Calendar API</span>
+            </button>
+            <p id="gcalFeedbackMsg" class="text-[11px] font-mono text-slate-400 dark:text-zinc-500"></p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: AGREGAR CONCEPTO / SUBCONCEPTO -->
+  <div id="conceptModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3.5">
+        <h3 class="font-semibold text-base text-slate-900 dark:text-white">Agregar Concepto o Subconcepto</h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="addConceptForm" class="space-y-4">
+        <!-- Tipo de Movimiento -->
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Tipo de Movimiento</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="flowType" value="expense" checked class="peer sr-only" />
+              <div class="text-center py-2 px-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 peer-checked:border-rose-500 peer-checked:bg-rose-500/10 peer-checked:text-rose-600 dark:peer-checked:text-rose-300 text-xs font-medium transition">
+                Egreso / Ahorro (-)
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="flowType" value="income" class="peer sr-only" />
+              <div class="text-center py-2 px-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-300 text-xs font-medium transition">
+                Ingreso Extra (+)
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Categoría Principal -->
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Categoría Principal</label>
+          <select id="modalCategorySelect" class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none">
+            <option value="Gastos Fijos Obligatorios">Gastos Fijos Obligatorios</option>
+            <option value="Ahorro / Inversión">Ahorro / Inversión</option>
+            <option value="Gustos / Ocio">Gustos / Ocio</option>
+            <option value="Ingresos Extras">Ingresos Extras</option>
+            <option value="Otros">Otros (Personalizar nombre)</option>
+          </select>
+        </div>
+
+        <!-- Campo condicional cuando elige "Otros" -->
+        <div id="customCategoryWrapper" class="hidden">
+          <label class="block text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1.5">Nombre del Concepto / Categoría Personalizada</label>
+          <input 
+            id="customCategoryInput" 
+            type="text" 
+            placeholder="Ej. Mascotas, Salud, Educación..."
+            class="w-full bg-slate-50 dark:bg-zinc-950 border border-emerald-500/60 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:outline-none"
+          />
+        </div>
+
+        <!-- Nombre del Subconcepto -->
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Nombre del Subconcepto</label>
+          <input 
+            id="subconceptNameInput" 
+            type="text" 
+            required
+            placeholder="Ej. Carro (Pago + Seguro), Servicios, CETES..."
+            class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
+
+        <!-- Monto y Periodo -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Monto (MXN)</label>
+            <input 
+              id="subconceptAmountInput" 
+              type="number" 
+              step="50" 
+              min="0" 
+              required
+              placeholder="1500"
+              class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-sm font-mono text-slate-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1.5">Distribución</label>
+            <select id="subconceptTargetPeriod" class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-zinc-100 focus:border-emerald-500 focus:outline-none">
+              <option value="0">Semana / Periodo 1</option>
+              <option value="1">Semana / Periodo 2</option>
+              <option value="2">Semana 3 (S3)</option>
+              <option value="3">Semana 4 (S4)</option>
+              <option value="all_repeat">Repetir en cada periodo</option>
+              <option value="all_split">Dividir entre los periodos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2">
+          <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /********************************************************************
+     * 1. SYSTEM THEME ADAPTATION (AUTO LIGHT / DARK)
+     ********************************************************************/
+    const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function applyTheme(themePref) {
+      const root = document.documentElement;
+      const isDark = themePref === 'dark' || (themePref === 'system' && systemDarkQuery.matches);
+      root.classList.toggle('dark', isDark);
+
+      const labelEl = document.getElementById('themeLabel');
+      const iconEl = document.getElementById('themeIcon');
+      if (labelEl && iconEl) {
+        const map = {
+          system: { label: 'Auto', icon: 'monitor' },
+          light:  { label: 'Claro', icon: 'sun' },
+          dark:   { label: 'Oscuro', icon: 'moon' }
+        };
+        const cfg = map[themePref] || map.system;
+        labelEl.textContent = cfg.label;
+        iconEl.setAttribute('data-lucide', cfg.icon);
+      }
+
+      document.querySelectorAll('.theme-opt-btn').forEach(btn => {
+        const active = btn.dataset.theme === themePref;
+        btn.className = `theme-opt-btn py-2 px-2 rounded-lg text-xs font-medium transition ${
+          active
+            ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold'
+            : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
+        }`;
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    systemDarkQuery.addEventListener('change', () => {
+      if (state.theme === 'system') applyTheme('system');
+    });
+
+    /********************************************************************
+     * 2. MEXICAN PAYROLL TAX ENGINE (ISR + IMSS)
+     ********************************************************************/
+    const ISR_MONTHLY_TABLE_MX = [
+      { lower: 0.01,      upper: 746.04,    fixed: 0.00,      rate: 0.0192 },
+      { lower: 746.05,    upper: 6332.05,   fixed: 14.32,     rate: 0.0640 },
+      { lower: 6332.06,   upper: 11128.01,  fixed: 371.83,    rate: 0.1088 },
+      { lower: 11128.02,  upper: 12935.82,  fixed: 893.63,    rate: 0.1600 },
+      { lower: 12935.83,  upper: 15487.71,  fixed: 1182.88,   rate: 0.1792 },
+      { lower: 15487.72,  upper: 31236.49,  fixed: 1640.18,   rate: 0.2136 },
+      { lower: 31236.50,  upper: 49233.00,  fixed: 5004.12,   rate: 0.2352 },
+      { lower: 49233.01,  upper: 93993.90,  fixed: 9236.89,   rate: 0.3000 },
+      { lower: 93993.91,  upper: 125325.20, fixed: 22665.17,  rate: 0.3200 },
+      { lower: 125325.21, upper: 375975.61, fixed: 32691.18,  rate: 0.3400 },
+      { lower: 375975.62, upper: Infinity,  fixed: 117912.32, rate: 0.3500 }
+    ];
+
+    function calculateMexicanNetSalary(grossMonthly, manualNetOverride = null) {
+      const gross = Math.max(0, Number(grossMonthly) || 0);
+      if (gross === 0) return { gross: 0, isr: 0, imss: 0, net: 0, effectiveRate: 0 };
+      const bracket = ISR_MONTHLY_TABLE_MX.find(b => gross >= b.lower && gross <= b.upper) || ISR_MONTHLY_TABLE_MX[ISR_MONTHLY_TABLE_MX.length - 1];
+      const isr = bracket.fixed + (Math.max(0, gross - bracket.lower) * bracket.rate);
+      const imss = gross * 0.0275;
+      const computedNet = Math.max(0, gross - isr - imss);
+      const finalNet = (manualNetOverride !== null && manualNetOverride !== '' && !isNaN(manualNetOverride))
+        ? Number(manualNetOverride)
+        : computedNet;
+      return {
+        gross,
+        isr,
+        imss,
+        net: finalNet,
+        effectiveRate: ((isr / gross) * 100).toFixed(1)
+      };
+    }
+
+    /********************************************************************
+     * 3. STATE MANAGEMENT (CLEAN / NO MOCK DATA)
+     ********************************************************************/
+    const STORAGE_KEY = 'FINCTRL_DASHBOARD_STATE_V3';
+    // Clean up older mock storage keys
+    localStorage.removeItem('FINCTRL_DASHBOARD_STATE_V1');
+    localStorage.removeItem('FINCTRL_DASHBOARD_STATE_V2');
+
+    function createDefaultMonthItems() {
+      return [];
+    }
+
+    function getInitialState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return {
+            activeScreen: 'dashboard',
+            focusedPeriod: 'ALL',
+            theme: 'system',
+            ...JSON.parse(saved)
+          };
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return {
+        activeScreen: 'dashboard', // 'dashboard' | 'schedule' | 'payroll'
+        focusedPeriod: 'ALL',      // 'ALL' | 0 | 1 | 2 | 3
+        theme: 'system',           // 'system' | 'light' | 'dark'
+        grossMonthly: 40000,
+        manualNetMonthly: '',
+        frequency: 'semanal',
+        currentMonth: '2026-12',
+        discountRule: 'both',
+        categoryFilter: 'ALL',
+        monthsData: {
+          '2026-12': createDefaultMonthItems()
+        }
+      };
+    }
+
+    let state = getInitialState();
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function ensureCurrentMonthExists() {
+      if (!state.monthsData[state.currentMonth]) {
+        state.monthsData[state.currentMonth] = createDefaultMonthItems().map(item => ({
+          ...item,
+          id: 'c-' + Math.random().toString(36).substring(2, 8),
+          periods: item.periods.map(p => ({ amount: p.amount, status: 'pending' }))
+        }));
+      }
+    }
+
+    /********************************************************************
+     * 4. HELPERS
+     ********************************************************************/
+    const currencyFmt = new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      maximumFractionDigits: 0
+    });
+
+    const currencyFmtDecimals = new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    function getPeriodConfig(frequency) {
+      if (frequency === 'semanal') {
+        return {
+          count: 4,
+          labels: ['Semana 1 (S1)', 'Semana 2 (S2)', 'Semana 3 (S3)', 'Semana 4 (S4)'],
+          shortLabels: ['S1', 'S2', 'S3', 'S4'],
+          unitName: 'semana',
+          badge: 'Frecuencia Semanal'
+        };
+      }
+      if (frequency === 'quincenal') {
+        return {
+          count: 2,
+          labels: ['Quincena 1 (Q1)', 'Quincena 2 (Q2)'],
+          shortLabels: ['Q1', 'Q2'],
+          unitName: 'quincena',
+          badge: 'Frecuencia Quincenal'
+        };
+      }
+      return {
+        count: 1,
+        labels: ['Mes Completo (M1)'],
+        shortLabels: ['M1'],
+        unitName: 'mes',
+        badge: 'Frecuencia Mensual'
+      };
+    }
+
+    function shouldDiscountStatus(status) {
+      return state.discountRule === 'paid_only'
+        ? status === 'paid'
+        : (status === 'paid' || status === 'reserved');
+    }
+
+    function getActivePeriodsForItem(item, periodCount) {
+      while (item.periods.length < 4) {
+        item.periods.push({ amount: 0, status: 'pending' });
+      }
+      if (periodCount === 4) {
+        return [0, 1, 2, 3].map(idx => ({
+          slotIndices: [idx],
+          amount: Number(item.periods[idx].amount) || 0,
+          status: item.periods[idx].status
+        }));
+      }
+      if (periodCount === 2) {
+        return [
+          {
+            slotIndices: [0, 1],
+            amount: (Number(item.periods[0].amount) || 0) + (Number(item.periods[1].amount) || 0),
+            status: item.periods[0].status
+          },
+          {
+            slotIndices: [2, 3],
+            amount: (Number(item.periods[2].amount) || 0) + (Number(item.periods[3].amount) || 0),
+            status: item.periods[2].status
+          }
+        ];
+      }
+      return [
+        {
+          slotIndices: [0, 1, 2, 3],
+          amount: item.periods.reduce((acc, p) => acc + (Number(p.amount) || 0), 0),
+          status: item.periods[0].status
+        }
+      ];
+    }
+
+    /********************************************************************
+     * 5. RENDER PIPELINE
+     ********************************************************************/
+    function switchScreen(screenName) {
+      state.activeScreen = screenName;
+      ['dashboard', 'schedule', 'payroll'].forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) el.classList.toggle('hidden', s !== screenName);
+      });
+
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const isActive = btn.dataset.screen === screenName;
+        btn.className = `nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
+          isActive
+            ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold'
+            : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+        }`;
+      });
+      saveState();
+    }
+
+    function renderAll() {
+      ensureCurrentMonthExists();
+      applyTheme(state.theme || 'system');
+      switchScreen(state.activeScreen || 'dashboard');
+
+      const payroll = calculateMexicanNetSalary(state.grossMonthly, state.manualNetMonthly);
+      const periodCfg = getPeriodConfig(state.frequency);
+      if (state.focusedPeriod !== 'ALL' && Number(state.focusedPeriod) >= periodCfg.count) {
+        state.focusedPeriod = 'ALL';
+      }
+
+      const items = state.monthsData[state.currentMonth];
+
+      document.getElementById('monthSelector').value = state.currentMonth;
+      document.getElementById('discountRuleSelect').value = state.discountRule;
+      document.getElementById('categoryFilter').value = state.categoryFilter;
+      document.getElementById('dashboardRuleBadge').textContent = state.discountRule === 'both' ? 'Pagado + Apartado' : 'Solo Pagado';
+
+      renderPayrollScreen(payroll, periodCfg);
+      renderDashboardScreen(payroll, periodCfg, items);
+      renderScheduleScreen(payroll, periodCfg, items);
+
+      saveState();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderPayrollScreen(payroll, periodCfg) {
+      const grossInput = document.getElementById('grossSalaryInput');
+      if (document.activeElement !== grossInput) grossInput.value = state.grossMonthly;
+
+      const manualInput = document.getElementById('manualNetInput');
+      if (document.activeElement !== manualInput) manualInput.value = state.manualNetMonthly || '';
+
+      document.getElementById('netMonthlyText').textContent = currencyFmtDecimals.format(payroll.net);
+
+      document.querySelectorAll('.freq-btn').forEach(btn => {
+        const isSelected = btn.dataset.freq === state.frequency;
+        btn.className = `freq-btn py-2 px-3 rounded-lg text-xs sm:text-sm font-medium transition ${
+          isSelected
+            ? 'bg-emerald-600 text-white font-semibold shadow-sm'
+            : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+        }`;
+      });
+
+      const grossPerPeriod = payroll.gross / periodCfg.count;
+      const netPerPeriod = payroll.net / periodCfg.count;
+      const summaryText = `Aproximadamente ${currencyFmt.format(grossPerPeriod)} MXN brutos / ~${currencyFmt.format(netPerPeriod)} MXN netos por ${periodCfg.unitName}`;
+
+      document.getElementById('freqBadgeTitle').textContent = periodCfg.badge.toUpperCase();
+      document.getElementById('dynamicFrequencySummary').textContent = summaryText;
+      document.getElementById('heroFrequencyBadge').textContent = periodCfg.badge;
+      document.getElementById('heroSalarySummary').textContent = summaryText;
+    }
+
+    function renderDashboardScreen(payroll, periodCfg, items) {
+      let extraIncomeExecuted = 0;
+      let extraIncomePlanned = 0;
+      let totalExpenseExecuted = 0;
+      let totalExpensePlanned = 0;
+      let totalPaidExpense = 0;
+      let totalReservedExpense = 0;
+      let totalPendingExpense = 0;
+      let totalSavedExecuted = 0;
+      let totalSavedPlanned = 0;
+
+      const categoryTotals = {
+        'Gastos Fijos Obligatorios': { executed: 0, planned: 0, color: 'bg-rose-500' },
+        'Ahorro / Inversión': { executed: 0, planned: 0, color: 'bg-blue-500' },
+        'Gustos / Ocio': { executed: 0, planned: 0, color: 'bg-purple-500' },
+        'Otros': { executed: 0, planned: 0, color: 'bg-amber-500' }
+      };
+
+      items.forEach(item => {
+        const activePeriods = getActivePeriodsForItem(item, periodCfg.count);
+        activePeriods.forEach(p => {
+          if (p.amount <= 0) return;
+          if (item.type === 'income') {
+            extraIncomePlanned += p.amount;
+            if (shouldDiscountStatus(p.status)) extraIncomeExecuted += p.amount;
+          } else {
+            totalExpensePlanned += p.amount;
+            if (p.status === 'paid') totalPaidExpense += p.amount;
+            if (p.status === 'reserved') totalReservedExpense += p.amount;
+            if (p.status === 'pending') totalPendingExpense += p.amount;
+
+            const isExecuted = shouldDiscountStatus(p.status);
+            if (isExecuted) totalExpenseExecuted += p.amount;
+
+            if (item.category === 'Ahorro / Inversión') {
+              totalSavedPlanned += p.amount;
+              if (isExecuted) totalSavedExecuted += p.amount;
+            }
+
+            const catKey = categoryTotals[item.category] ? item.category : 'Otros';
+            categoryTotals[catKey].planned += p.amount;
+            if (isExecuted) categoryTotals[catKey].executed += p.amount;
+          }
+        });
+      });
+
+      const totalNetPool = payroll.net + extraIncomeExecuted;
+      const availableBalance = totalNetPool - totalExpenseExecuted;
+
+      document.getElementById('kpiTotalIncome').textContent = currencyFmt.format(totalNetPool);
+      document.getElementById('kpiExtraIncomeSub').textContent = extraIncomeExecuted > 0
+        ? `+${currencyFmt.format(extraIncomeExecuted)} extras confirmados`
+        : 'Base nómina mensual neta';
+
+      document.getElementById('kpiTotalSpent').textContent = currencyFmt.format(totalExpenseExecuted);
+      document.getElementById('kpiPlannedSpentSub').textContent = `de ${currencyFmt.format(totalExpensePlanned)} planeados`;
+
+      document.getElementById('kpiTotalSaved').textContent = currencyFmt.format(totalSavedExecuted);
+      const saveRate = totalNetPool > 0 ? ((totalSavedExecuted / totalNetPool) * 100).toFixed(1) : 0;
+      document.getElementById('kpiSavedRateSub').textContent = `${saveRate}% del ingreso (${currencyFmt.format(totalSavedPlanned)} meta)`;
+
+      const availEl = document.getElementById('kpiAvailableBalance');
+      availEl.textContent = currencyFmt.format(availableBalance);
+      document.getElementById('kpiPendingSub').textContent = `${currencyFmt.format(totalPendingExpense)} aún en [Pendiente]`;
+
+      // Progress bars
+      const denom = Math.max(totalNetPool, totalExpensePlanned, 1);
+      const paidPct = Math.min(100, (totalPaidExpense / denom) * 100);
+      const reservedPct = Math.min(100 - paidPct, (totalReservedExpense / denom) * 100);
+      const pendingPct = Math.min(100 - paidPct - reservedPct, (totalPendingExpense / denom) * 100);
+
+      document.getElementById('barPaid').style.width = `${paidPct}%`;
+      document.getElementById('barReserved').style.width = `${reservedPct}%`;
+      document.getElementById('barPending').style.width = `${pendingPct}%`;
+
+      const execRatio = totalNetPool > 0 ? ((totalExpenseExecuted / totalNetPool) * 100).toFixed(0) : 0;
+      const plannedRatio = totalNetPool > 0 ? ((totalExpensePlanned / totalNetPool) * 100).toFixed(0) : 0;
+      document.getElementById('executionPercentText').textContent = `${execRatio}% descontado (${currencyFmt.format(totalExpenseExecuted)})`;
+      document.getElementById('budgetedPercentText').textContent = `${plannedRatio}% presupuestado`;
+
+      // Categories list
+      document.getElementById('categoryBarsContainer').innerHTML = Object.entries(categoryTotals).map(([catName, data]) => {
+        const pct = data.planned > 0 ? Math.min(100, Math.round((data.executed / data.planned) * 100)) : 0;
+        return `
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-slate-700 dark:text-zinc-300">${catName}</span>
+              <span class="font-mono text-slate-500 dark:text-zinc-400">${currencyFmt.format(data.executed)} / ${currencyFmt.format(data.planned)}</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div class="${data.color} h-full transition-all duration-300" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Period cards on Dashboard
+      document.getElementById('periodModeHelperText').textContent = `${periodCfg.count} ${periodCfg.count === 1 ? 'Periodo' : 'Periodos'}`;
+      const baseNetPerPeriod = payroll.net / periodCfg.count;
+
+      document.getElementById('periodSummaryCards').innerHTML = periodCfg.labels.map((label, pIdx) => {
+        let periodExtraIncome = 0;
+        let periodExecutedOutflow = 0;
+        let periodPendingOutflow = 0;
+
+        items.forEach(item => {
+          const p = getActivePeriodsForItem(item, periodCfg.count)[pIdx];
+          if (!p || p.amount <= 0) return;
+          if (item.type === 'income') {
+            if (shouldDiscountStatus(p.status)) periodExtraIncome += p.amount;
+          } else {
+            if (shouldDiscountStatus(p.status)) periodExecutedOutflow += p.amount;
+            else periodPendingOutflow += p.amount;
+          }
+        });
+
+        const totalInflow = baseNetPerPeriod + periodExtraIncome;
+        const remainingCash = totalInflow - periodExecutedOutflow;
+        const usagePct = totalInflow > 0 ? Math.min(100, Math.round((periodExecutedOutflow / totalInflow) * 100)) : 0;
+
+        return `
+          <button
+            type="button"
+            data-jump-period="${pIdx}"
+            class="text-left bg-slate-50/80 hover:bg-slate-100/80 dark:bg-zinc-950/60 dark:hover:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-xl p-4 transition flex flex-col justify-between group"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold text-xs sm:text-sm text-slate-800 dark:text-zinc-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">${label}</span>
+              <span class="text-[11px] font-mono text-slate-400">Neto: ${currencyFmt.format(totalInflow)}</span>
+            </div>
+            <div class="my-1">
+              <span class="text-[11px] text-slate-400 dark:text-zinc-500 block">Disponible</span>
+              <span class="font-mono text-xl font-bold ${remainingCash >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                ${currencyFmt.format(remainingCash)}
+              </span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden my-2.5">
+              <div class="${remainingCash >= 0 ? 'bg-emerald-500' : 'bg-rose-500'} h-full transition-all duration-300" style="width: ${usagePct}%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-zinc-400">
+              <span>Pagado/Apart: ${currencyFmt.format(periodExecutedOutflow)}</span>
+              <span class="text-amber-600 dark:text-amber-400">Pend: ${currencyFmt.format(periodPendingOutflow)}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function getStatusBadgeClasses(status) {
+      switch (status) {
+        case 'paid':
+          return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+        case 'reserved':
+          return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30';
+        default:
+          return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30';
+      }
+    }
+
+    function getCategoryBadge(category, customCategory) {
+      const label = category === 'Otros' && customCategory ? `Otros • ${customCategory}` : category;
+      const styles = {
+        'Gastos Fijos Obligatorios': 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20',
+        'Ahorro / Inversión': 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20',
+        'Gustos / Ocio': 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20',
+        'Ingresos Extras': 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20',
+        'Otros': 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+      };
+      const cls = styles[category] || styles['Otros'];
+      return `<span class="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${cls}">${label}</span>`;
+    }
+
+    function renderScheduleScreen(payroll, periodCfg, items) {
+      // 1. Render Period Focus Pills ([Todos] [S1] [S2] ...)
+      const pillsContainer = document.getElementById('periodFocusPills');
+      const pillButtons = [
+        { key: 'ALL', label: 'Todos' },
+        ...periodCfg.shortLabels.map((lbl, idx) => ({ key: String(idx), label: lbl }))
+      ];
+      pillsContainer.innerHTML = pillButtons.map(p => {
+        const active = String(state.focusedPeriod) === p.key;
+        return `
+          <button
+            type="button"
+            data-focus-period="${p.key}"
+            class="px-2.5 py-1 rounded-lg transition ${
+              active
+                ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900'
+            }"
+          >${p.label}</button>
+        `;
+      }).join('');
+
+      // Determine visible period indices
+      const visibleIndices = state.focusedPeriod === 'ALL'
+        ? periodCfg.labels.map((_, i) => i)
+        : [Number(state.focusedPeriod)];
+
+      const thead = document.getElementById('matrixTableHead');
+      const tbody = document.getElementById('matrixTableBody');
+      const tfoot = document.getElementById('matrixTableFoot');
+
+      thead.innerHTML = `
+        <th class="py-3.5 px-5 min-w-[240px]">Subconcepto</th>
+        ${visibleIndices.map(i => `<th class="py-3.5 px-4 min-w-[210px] text-center border-l border-slate-200/70 dark:border-zinc-800/80">${periodCfg.labels[i]}</th>`).join('')}
+        <th class="py-3.5 px-5 text-right border-l border-slate-200/70 dark:border-zinc-800/80 min-w-[120px]">Total Mes</th>
+        <th class="py-3.5 px-3 text-center w-12"></th>
+      `;
+
+      const filteredItems = items.filter(item => {
+        if (state.categoryFilter === 'ALL') return true;
+        return item.category === state.categoryFilter;
+      });
+
+      const categoryOrder = [
+        'Gastos Fijos Obligatorios',
+        'Ahorro / Inversión',
+        'Gustos / Ocio',
+        'Otros',
+        'Ingresos Extras'
+      ];
+
+      const groups = {
+        'Gastos Fijos Obligatorios': [],
+        'Ahorro / Inversión': [],
+        'Gustos / Ocio': [],
+        'Otros': [],
+        'Ingresos Extras': []
+      };
+
+      filteredItems.forEach(item => {
+        const cat = categoryOrder.includes(item.category) ? item.category : 'Otros';
+        groups[cat].push(item);
+      });
+
+      const orderedCats = state.categoryFilter === 'ALL'
+        ? ['Gastos Fijos Obligatorios', 'Ahorro / Inversión', 'Gustos / Ocio', 'Otros', ...(groups['Ingresos Extras'].length > 0 ? ['Ingresos Extras'] : [])]
+        : [state.categoryFilter];
+
+      tbody.innerHTML = orderedCats.map(catName => {
+        const catItems = groups[catName] || [];
+        const groupHeader = `
+          <tr class="bg-slate-100/70 dark:bg-zinc-950/70">
+            <td colspan="${visibleIndices.length + 3}" class="py-2.5 px-5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  ${getCategoryBadge(catName, '')}
+                  <span class="text-[11px] font-mono text-slate-400 dark:text-zinc-500">(${catItems.length})</span>
+                </div>
+                <button
+                  type="button"
+                  data-action="quick-add-category"
+                  data-category="${catName}"
+                  class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                >
+                  <span>+ Añadir en ${catName}</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        if (catItems.length === 0) {
+          return groupHeader + `
+            <tr>
+              <td colspan="${visibleIndices.length + 3}" class="py-3.5 px-5 text-xs text-slate-400 dark:text-zinc-500 italic">
+                Sin subconceptos registrados aún en ${catName}.
+              </td>
+            </tr>
+          `;
+        }
+
+        const rows = catItems.map(item => {
+          const activePeriods = getActivePeriodsForItem(item, periodCfg.count);
+          const rowTotal = activePeriods.reduce((sum, p) => sum + p.amount, 0);
+          const rowExecuted = activePeriods.reduce((sum, p) => sum + (shouldDiscountStatus(p.status) ? p.amount : 0), 0);
+
+          const cells = visibleIndices.map(pIdx => {
+            const p = activePeriods[pIdx];
+            const statusClass = getStatusBadgeClasses(p.status);
+            return `
+              <td class="p-3 border-l border-slate-100 dark:border-zinc-800/60 align-middle">
+                <div class="flex items-center gap-2">
+                  <div class="relative flex-1">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">$</span>
+                    <input
+                      type="number"
+                      step="50"
+                      min="0"
+                      value="${p.amount}"
+                      data-action="edit-amount"
+                      data-id="${item.id}"
+                      data-period="${pIdx}"
+                      class="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-lg pl-6 pr-2 py-1.5 font-mono text-xs text-slate-900 dark:text-zinc-100 focus:outline-none"
+                    />
+                  </div>
+                  <select
+                    data-action="edit-status"
+                    data-id="${item.id}"
+                    data-period="${pIdx}"
+                    class="text-xs font-medium rounded-lg border px-2.5 py-1.5 cursor-pointer focus:outline-none transition ${statusClass}"
+                  >
+                    <option value="pending" class="bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-300" ${p.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                    <option value="reserved" class="bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-300" ${p.status === 'reserved' ? 'selected' : ''}>Apartado</option>
+                    <option value="paid" class="bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-300" ${p.status === 'paid' ? 'selected' : ''}>Pagado</option>
+                  </select>
+                </div>
+              </td>
+            `;
+          }).join('');
+
+          return `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-zinc-800/30 transition group">
+              <td class="py-3 px-5">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value="${item.name.replace(/"/g, '&quot;')}"
+                    data-action="edit-name"
+                    data-id="${item.id}"
+                    class="bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 focus:border-emerald-500 font-medium text-slate-800 dark:text-zinc-100 text-sm focus:outline-none w-full py-0.5"
+                  />
+                  ${item.type === 'income' ? '<span class="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 rounded">+INGRESO</span>' : ''}
+                </div>
+                ${item.category === 'Otros' && item.customCategory ? `<span class="text-[11px] text-amber-600 dark:text-amber-400 block">${item.customCategory}</span>` : ''}
+              </td>
+              ${cells}
+              <td class="py-3 px-5 text-right border-l border-slate-100 dark:border-zinc-800/60 font-mono">
+                <div class="text-xs font-bold text-slate-900 dark:text-zinc-100">${currencyFmt.format(rowTotal)}</div>
+                <div class="text-[11px] text-slate-400">Ejec: ${currencyFmt.format(rowExecuted)}</div>
+              </td>
+              <td class="py-3 px-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <button
+                    data-action="gcal-item"
+                    data-id="${item.id}"
+                    class="text-slate-400 hover:text-blue-500 p-1 rounded opacity-60 group-hover:opacity-100 transition"
+                    title="Agendar recordatorio en Google Calendar"
+                  >
+                    <i data-lucide="calendar-plus" class="w-4 h-4 pointer-events-none"></i>
+                  </button>
+                  <button
+                    data-action="delete-item"
+                    data-id="${item.id}"
+                    class="text-slate-400 hover:text-rose-500 p-1 rounded opacity-50 group-hover:opacity-100 transition"
+                    title="Eliminar"
+                  >
+                    <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        return groupHeader + rows;
+      }).join('');
+
+      // Footer
+      const colTotals = visibleIndices.map(pIdx => {
+        let planned = 0;
+        let executed = 0;
+        filteredItems.forEach(item => {
+          const active = getActivePeriodsForItem(item, periodCfg.count)[pIdx];
+          if (!active) return;
+          const sign = item.type === 'income' ? -1 : 1;
+          planned += active.amount * sign;
+          if (shouldDiscountStatus(active.status)) executed += active.amount * sign;
+        });
+        return { planned, executed };
+      });
+
+      const grandPlanned = colTotals.reduce((a, b) => a + b.planned, 0);
+      const grandExecuted = colTotals.reduce((a, b) => a + b.executed, 0);
+
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-3.5 px-5 font-semibold text-slate-700 dark:text-zinc-300">
+            Total Descontado vs Planeado
+          </td>
+          ${colTotals.map(c => `
+            <td class="py-3.5 px-4 text-right border-l border-slate-200 dark:border-zinc-800">
+              <div class="text-emerald-600 dark:text-emerald-400 font-bold">Desc: ${currencyFmt.format(c.executed)}</div>
+              <div class="text-[11px] text-slate-400">Plan: ${currencyFmt.format(c.planned)}</div>
+            </td>
+          `).join('')}
+          <td class="py-3.5 px-5 text-right border-l border-slate-200 dark:border-zinc-800">
+            <div class="text-emerald-600 dark:text-emerald-400 font-bold">${currencyFmt.format(grandExecuted)}</div>
+            <div class="text-[11px] text-slate-400">de ${currencyFmt.format(grandPlanned)}</div>
+          </td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    /********************************************************************
+     * 6. SUPABASE CLOUD DATABASE INTEGRATION
+     ********************************************************************/
+    const SUPABASE_CREDS_KEY = 'FINCTRL_SUPABASE_CREDS_V1';
+    let supabaseClient = null;
+    let supabaseSyncTimeout = null;
+
+    function getSavedCloudCreds() {
+      try {
+        return JSON.parse(localStorage.getItem(SUPABASE_CREDS_KEY)) || { url: '', key: '', googleClientId: '' };
+      } catch (e) {
+        return { url: '', key: '', googleClientId: '' };
+      }
+    }
+
+    function saveCloudCreds(creds) {
+      localStorage.setItem(SUPABASE_CREDS_KEY, JSON.stringify(creds));
+    }
+
+    function updateCloudStatusUI(status, message = '') {
+      const dot = document.getElementById('cloudStatusDot');
+      const text = document.getElementById('cloudStatusText');
+      const badge = document.getElementById('supabasePanelStatusBadge');
+      const msgEl = document.getElementById('supabaseFeedbackMsg');
+
+      if (status === 'connected') {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        text.textContent = 'Supabase ☁️';
+        badge.textContent = 'Conectado';
+        badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
+      } else if (status === 'syncing') {
+        dot.className = 'w-2 h-2 rounded-full bg-blue-500 animate-pulse';
+        text.textContent = 'Guardando...';
+        badge.textContent = 'Sincronizando...';
+      } else if (status === 'error') {
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        text.textContent = 'Error Nube';
+        badge.textContent = 'Error';
+        badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        text.textContent = 'Local';
+        badge.textContent = 'Sin conectar';
+        badge.className = 'text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400';
+      }
+
+      if (message && msgEl) {
+        msgEl.textContent = message;
+      }
+    }
+
+    function initSupabaseFromSaved() {
+      const creds = getSavedCloudCreds();
+      const urlInput = document.getElementById('supabaseUrlInput');
+      const keyInput = document.getElementById('supabaseKeyInput');
+      const gcalInput = document.getElementById('googleClientIdInput');
+
+      if (urlInput && creds.url) urlInput.value = creds.url;
+      if (keyInput && creds.key) keyInput.value = creds.key;
+      if (gcalInput && creds.googleClientId) gcalInput.value = creds.googleClientId;
+
+      if (creds.url && creds.key && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(creds.url, creds.key);
+          updateCloudStatusUI('connected', 'Conectado a Supabase. Auto-guardado activo.');
+          return true;
+        } catch (err) {
+          console.error(err);
+          updateCloudStatusUI('error', 'Error al inicializar cliente Supabase: ' + err.message);
+        }
+      }
+      return false;
+    }
+
+    async function pushToSupabase(silent = false) {
+      if (!supabaseClient) {
+        if (!silent) updateCloudStatusUI('error', 'Ingresa primero tu Project URL y Anon Key de Supabase.');
+        return;
+      }
+      try {
+        updateCloudStatusUI('syncing');
+
+        // 1. Upsert full state backup row
+        const backupPayload = {
+          profile_key: 'personal',
+          gross_monthly: Number(state.grossMonthly) || 40000,
+          manual_net_monthly: String(state.manualNetMonthly || ''),
+          frequency: state.frequency || 'semanal',
+          discount_rule: state.discountRule || 'both',
+          months_data: state.monthsData || {},
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: err1 } = await supabaseClient
+          .from('finctrl_backups')
+          .upsert(backupPayload, { onConflict: 'profile_key' });
+
+        if (err1) throw err1;
+
+        // 2. Sync normalized concepts for current month
+        const currentItems = state.monthsData[state.currentMonth] || [];
+        await supabaseClient
+          .from('finctrl_concepts')
+          .delete()
+          .eq('profile_key', 'personal')
+          .eq('month_key', state.currentMonth);
+
+        if (currentItems.length > 0) {
+          const rows = currentItems.map(item => ({
+            id: item.id,
+            month_key: state.currentMonth,
+            profile_key: 'personal',
+            category: item.category,
+            custom_category: item.customCategory || '',
+            name: item.name,
+            flow_type: item.type || 'expense',
+            s1_amount: Number(item.periods[0]?.amount) || 0,
+            s1_status: item.periods[0]?.status || 'pending',
+            s2_amount: Number(item.periods[1]?.amount) || 0,
+            s2_status: item.periods[1]?.status || 'pending',
+            s3_amount: Number(item.periods[2]?.amount) || 0,
+            s3_status: item.periods[2]?.status || 'pending',
+            s4_amount: Number(item.periods[3]?.amount) || 0,
+            s4_status: item.periods[3]?.status || 'pending',
+            updated_at: new Date().toISOString()
+          }));
+          const { error: err2 } = await supabaseClient.from('finctrl_concepts').upsert(rows);
+          if (err2) throw err2;
+        }
+
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        updateCloudStatusUI('connected', `Sincronizado con Supabase (${timeStr})`);
+      } catch (err) {
+        console.error('Supabase push error:', err);
+        updateCloudStatusUI('error', `Error Supabase: ${err.message || 'Verifica haber ejecutado supabase_schema.sql'}`);
+      }
+    }
+
+    async function pullFromSupabase() {
+      if (!supabaseClient) {
+        updateCloudStatusUI('error', 'Conecta primero tu Project URL y Anon Key de Supabase.');
+        return;
+      }
+      try {
+        updateCloudStatusUI('syncing', 'Descargando datos desde Supabase...');
+        const { data, error } = await supabaseClient
+          .from('finctrl_backups')
+          .select('*')
+          .eq('profile_key', 'personal')
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          updateCloudStatusUI('connected', 'No hay respaldo previo en la nube. Subiendo estado actual...');
+          await pushToSupabase(true);
+          return;
+        }
+
+        state.grossMonthly = Number(data.gross_monthly) || 40000;
+        state.manualNetMonthly = data.manual_net_monthly || '';
+        state.frequency = data.frequency || 'semanal';
+        state.discountRule = data.discount_rule || 'both';
+        if (data.months_data && typeof data.months_data === 'object') {
+          state.monthsData = data.months_data;
+        }
+        renderAll(true);
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        updateCloudStatusUI('connected', `Datos cargados desde Supabase (${timeStr})`);
+      } catch (err) {
+        console.error('Supabase pull error:', err);
+        updateCloudStatusUI('error', `Error al descargar: ${err.message}`);
+      }
+    }
+
+    function scheduleAutoCloudSync() {
+      if (!supabaseClient) return;
+      clearTimeout(supabaseSyncTimeout);
+      supabaseSyncTimeout = setTimeout(() => {
+        pushToSupabase(true);
+      }, 900);
+    }
+
+    /********************************************************************
+     * 7. GOOGLE CALENDAR INTEGRATION (1-CLICK TEMPLATE, .ICS & OAUTH API)
+     ********************************************************************/
+    function getPeriodDateRange(monthKey, periodIdx, periodCount) {
+      const [yearStr, monthStr] = monthKey.split('-');
+      const year = Number(yearStr);
+      const month = Number(monthStr); // 1-12
+      let startDay = 1;
+      if (periodCount === 4) {
+        startDay = [1, 8, 15, 22][periodIdx] || 1;
+      } else if (periodCount === 2) {
+        startDay = periodIdx === 0 ? 1 : 15;
+      } else {
+        startDay = 1;
+      }
+      const pad = (n) => String(n).padStart(2, '0');
+      const startDateFormatted = `${year}${pad(month)}${pad(startDay)}`;
+      const endDateFormatted = `${year}${pad(month)}${pad(Math.min(28, startDay + 1))}`;
+      const isoDate = `${year}-${pad(month)}-${pad(startDay)}`;
+      return { startDateFormatted, endDateFormatted, isoDate };
+    }
+
+    function getStatusLabelEs(status) {
+      if (status === 'paid') return 'PAGADO ✅';
+      if (status === 'reserved') return 'APARTADO 🔵';
+      return 'PENDIENTE ⏳';
+    }
+
+    // 1-Click open in Google Calendar Web for any row
+    function openGoogleCalendarForItem(item) {
+      const periodCfg = getPeriodConfig(state.frequency);
+      const activePeriods = getActivePeriodsForItem(item, periodCfg.count);
+      // Find first period with amount > 0, or default to period 0
+      let targetIdx = activePeriods.findIndex(p => p.amount > 0);
+      if (targetIdx === -1) targetIdx = 0;
+      const p = activePeriods[targetIdx];
+      const dates = getPeriodDateRange(state.currentMonth, targetIdx, periodCfg.count);
+
+      const title = `${item.type === 'income' ? '💵 Ingreso' : '💰 Pago'}: ${item.name} (${currencyFmt.format(p.amount)} MXN)`;
+      const details = `Categoría: ${item.category}\nPeriodo: ${periodCfg.labels[targetIdx]} (${state.currentMonth})\nMonto: ${currencyFmt.format(p.amount)} MXN\nEstatus en FINCTRL: ${getStatusLabelEs(p.status)}`;
+
+      const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates.startDateFormatted}/${dates.endDateFormatted}&details=${encodeURIComponent(details)}`;
+      window.open(gcalUrl, '_blank', 'noopener');
+    }
+
+    // Generate & download .ics calendar file for the entire month
+    function downloadMonthIcsFile() {
+      const items = state.monthsData[state.currentMonth] || [];
+      const periodCfg = getPeriodConfig(state.frequency);
+      const events = [];
+
+      items.forEach(item => {
+        const activePeriods = getActivePeriodsForItem(item, periodCfg.count);
+        activePeriods.forEach((p, pIdx) => {
+          if (p.amount <= 0) return;
+          const dates = getPeriodDateRange(state.currentMonth, pIdx, periodCfg.count);
+          const summary = `${item.type === 'income' ? 'Ingreso' : 'Pago'}: ${item.name} - ${currencyFmt.format(p.amount)} [${getStatusLabelEs(p.status)}]`;
+          const desc = `Categoria: ${item.category} | Periodo: ${periodCfg.labels[pIdx]} | Estatus: ${getStatusLabelEs(p.status)}`;
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:finctrl-${state.currentMonth}-${item.id}-p${pIdx}@finctrl.local`,
+            `DTSTAMP:${dates.startDateFormatted}T090000Z`,
+            `DTSTART;VALUE=DATE:${dates.startDateFormatted}`,
+            `DTEND;VALUE=DATE:${dates.endDateFormatted}`,
+            `SUMMARY:${summary}`,
+            `DESCRIPTION:${desc}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        });
+      });
+
+      const msgEl = document.getElementById('gcalFeedbackMsg');
+      if (events.length === 0) {
+        alert('Agrega primero al menos un concepto con monto mayor a $0 en este mes para generar los eventos del calendario.');
+        if (msgEl) msgEl.textContent = 'Sin conceptos con monto > $0 en este mes.';
+        return;
+      }
+
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//FINCTRL//Dashboard Financiero Personal//ES',
+        'CALSCALE:GREGORIAN',
+        ...events,
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FINCTRL_Calendario_${state.currentMonth}.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      if (msgEl) {
+        msgEl.textContent = `Archivo .ics descargado con ${events.length} eventos. Impórtalo en Google Calendar (Configuración -> Importar).`;
+      }
+    }
+
+    // Direct Google Calendar API OAuth Sync
+    function syncMonthWithGoogleCalendarApi() {
+      const clientId = document.getElementById('googleClientIdInput').value.trim();
+      const msgEl = document.getElementById('gcalFeedbackMsg');
+
+      if (!clientId) {
+        // Fallback to .ics download if user hasn't entered an OAuth Client ID
+        downloadMonthIcsFile();
+        return;
+      }
+
+      const creds = getSavedCloudCreds();
+      creds.googleClientId = clientId;
+      saveCloudCreds(creds);
+
+      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+        if (msgEl) msgEl.textContent = 'Cargando librería Google OAuth... intenta de nuevo en un segundo.';
+        return;
+      }
+
+      const items = state.monthsData[state.currentMonth] || [];
+      const periodCfg = getPeriodConfig(state.frequency);
+      const payloads = [];
+
+      items.forEach(item => {
+        const activePeriods = getActivePeriodsForItem(item, periodCfg.count);
+        activePeriods.forEach((p, pIdx) => {
+          if (p.amount <= 0) return;
+          const dates = getPeriodDateRange(state.currentMonth, pIdx, periodCfg.count);
+          payloads.push({
+            summary: `${item.type === 'income' ? '💵 Ingreso' : '💰 Pago'}: ${item.name} (${currencyFmt.format(p.amount)})`,
+            description: `Categoría: ${item.category}\nPeriodo: ${periodCfg.labels[pIdx]}\nEstatus: ${getStatusLabelEs(p.status)}`,
+            start: { date: dates.isoDate },
+            end: { date: dates.isoDate }
+          });
+        });
+      });
+
+      if (payloads.length === 0) {
+        if (msgEl) msgEl.textContent = 'No hay conceptos con monto > $0 en este mes para sincronizar.';
+        return;
+      }
+
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/calendar.events',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.error) {
+            if (msgEl) msgEl.textContent = 'Error OAuth: ' + tokenResponse.error;
+            return;
+          }
+          if (msgEl) msgEl.textContent = `Sincronizando ${payloads.length} eventos con tu Google Calendar...`;
+          let createdCount = 0;
+          for (const ev of payloads) {
+            const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${tokenResponse.access_token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(ev)
+            });
+            if (res.ok) createdCount++;
+          }
+          if (msgEl) msgEl.textContent = `¡Listo! Se crearon ${createdCount} eventos en tu Google Calendar primario.`;
+        }
+      });
+
+      tokenClient.requestAccessToken();
+    }
+
+    /********************************************************************
+     * 8. EVENT LISTENERS
+     ********************************************************************/
+    // Hook auto cloud sync into saveState
+    const originalSaveState = saveState;
+    saveState = function() {
+      originalSaveState();
+      scheduleAutoCloudSync();
+    };
+
+    // Screen navigation tabs
+    document.getElementById('mainNavTabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.nav-tab');
+      if (!btn) return;
+      switchScreen(btn.dataset.screen);
+    });
+
+    document.getElementById('cloudStatusBtn').addEventListener('click', () => {
+      switchScreen('payroll');
+    });
+
+    document.getElementById('goToScheduleBtn').addEventListener('click', () => {
+      state.focusedPeriod = 'ALL';
+      renderAll();
+      switchScreen('schedule');
+    });
+
+    // Supabase buttons
+    document.getElementById('supabaseConnectBtn').addEventListener('click', async () => {
+      const url = document.getElementById('supabaseUrlInput').value.trim();
+      const key = document.getElementById('supabaseKeyInput').value.trim();
+      const gcalId = document.getElementById('googleClientIdInput').value.trim();
+      if (!url || !key) {
+        updateCloudStatusUI('error', 'Por favor ingresa tu Project URL y Anon Public Key de Supabase.');
+        return;
+      }
+      saveCloudCreds({ url, key, googleClientId: gcalId });
+      if (initSupabaseFromSaved()) {
+        await pushToSupabase(false);
+      }
+    });
+
+    document.getElementById('supabasePushBtn').addEventListener('click', () => pushToSupabase(false));
+    document.getElementById('supabasePullBtn').addEventListener('click', () => pullFromSupabase());
+
+    // Google Calendar buttons
+    document.getElementById('downloadIcsMonthBtn').addEventListener('click', downloadMonthIcsFile);
+    document.getElementById('googleApiSyncBtn').addEventListener('click', syncMonthWithGoogleCalendarApi);
+    document.getElementById('syncGCalToolbarBtn').addEventListener('click', () => {
+      const creds = getSavedCloudCreds();
+      if (creds.googleClientId) {
+        syncMonthWithGoogleCalendarApi();
+      } else {
+        downloadMonthIcsFile();
+      }
+    });
+
+    // Click period card on Dashboard -> jump to that period in Schedule
+    document.getElementById('periodSummaryCards').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-jump-period]');
+      if (!card) return;
+      state.focusedPeriod = card.dataset.jumpPeriod;
+      state.activeScreen = 'schedule';
+      renderAll();
+    });
+
+    // Period focus pills in Schedule
+    document.getElementById('periodFocusPills').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-focus-period]');
+      if (!btn) return;
+      state.focusedPeriod = btn.dataset.focusPeriod;
+      renderAll();
+    });
+
+    // Theme cycle button in top bar & settings group
+    document.getElementById('themeCycleBtn').addEventListener('click', () => {
+      const order = ['system', 'light', 'dark'];
+      const next = order[(order.indexOf(state.theme || 'system') + 1) % order.length];
+      state.theme = next;
+      renderAll();
+    });
+
+    document.getElementById('themeGroup').addEventListener('click', (e) => {
+      const btn = e.target.closest('.theme-opt-btn');
+      if (!btn) return;
+      state.theme = btn.dataset.theme;
+      renderAll();
+    });
+
+    // Payroll inputs
+    document.getElementById('grossSalaryInput').addEventListener('input', (e) => {
+      state.grossMonthly = Math.max(0, Number(e.target.value) || 0);
+      renderAll();
+    });
+
+    document.getElementById('manualNetInput').addEventListener('input', (e) => {
+      state.manualNetMonthly = e.target.value;
+      renderAll();
+    });
+
+    document.getElementById('frequencyGroup').addEventListener('click', (e) => {
+      const btn = e.target.closest('.freq-btn');
+      if (!btn) return;
+      state.frequency = btn.dataset.freq;
+      state.focusedPeriod = 'ALL';
+      renderAll();
+    });
+
+    // Month Selector
+    const monthSelector = document.getElementById('monthSelector');
+    monthSelector.addEventListener('change', (e) => {
+      state.currentMonth = e.target.value;
+      renderAll();
+    });
+
+    document.getElementById('prevMonthBtn').addEventListener('click', () => {
+      if (monthSelector.selectedIndex > 0) {
+        monthSelector.selectedIndex -= 1;
+        state.currentMonth = monthSelector.value;
+        renderAll();
+      }
+    });
+
+    document.getElementById('nextMonthBtn').addEventListener('click', () => {
+      if (monthSelector.selectedIndex < monthSelector.options.length - 1) {
+        monthSelector.selectedIndex += 1;
+        state.currentMonth = monthSelector.value;
+        renderAll();
+      }
+    });
+
+    document.getElementById('discountRuleSelect').addEventListener('change', (e) => {
+      state.discountRule = e.target.value;
+      renderAll();
+    });
+
+    document.getElementById('categoryFilter').addEventListener('change', (e) => {
+      state.categoryFilter = e.target.value;
+      renderAll();
+    });
+
+    // Matrix interactions
+    document.getElementById('matrixTableBody').addEventListener('change', (e) => {
+      const target = e.target;
+      const action = target.dataset.action;
+      if (!action) return;
+
+      const item = state.monthsData[state.currentMonth].find(i => i.id === target.dataset.id);
+      if (!item) return;
+
+      if (action === 'edit-name') {
+        if (target.value.trim()) item.name = target.value.trim();
+        renderAll();
+        return;
+      }
+
+      const periodIdx = Number(target.dataset.period);
+      const periodCfg = getPeriodConfig(state.frequency);
+      const targetGroup = getActivePeriodsForItem(item, periodCfg.count)[periodIdx];
+      if (!targetGroup) return;
+
+      if (action === 'edit-amount') {
+        const newVal = Math.max(0, Number(target.value) || 0);
+        targetGroup.slotIndices.forEach((slotIdx, idx) => {
+          item.periods[slotIdx].amount = idx === 0 ? newVal : 0;
+        });
+        renderAll();
+      } else if (action === 'edit-status') {
+        targetGroup.slotIndices.forEach(slotIdx => {
+          item.periods[slotIdx].status = target.value;
+        });
+        renderAll();
+      }
+    });
+
+    // Modal logic
+    const conceptModal = document.getElementById('conceptModal');
+    const modalCategorySelect = document.getElementById('modalCategorySelect');
+    const customCategoryWrapper = document.getElementById('customCategoryWrapper');
+
+    function openModal(presetCategory = null) {
+      conceptModal.classList.remove('hidden');
+      conceptModal.classList.add('flex');
+      if (presetCategory) {
+        modalCategorySelect.value = presetCategory;
+        const isIncome = presetCategory === 'Ingresos Extras';
+        document.querySelector(`input[name="flowType"][value="${isIncome ? 'income' : 'expense'}"]`).checked = true;
+        customCategoryWrapper.classList.toggle('hidden', presetCategory !== 'Otros');
+      }
+      document.getElementById('subconceptNameInput').focus();
+    }
+
+    function closeModal() {
+      conceptModal.classList.add('hidden');
+      conceptModal.classList.remove('flex');
+      document.getElementById('addConceptForm').reset();
+      customCategoryWrapper.classList.add('hidden');
+    }
+
+    document.querySelectorAll('.open-add-modal-btn').forEach(btn => {
+      btn.addEventListener('click', () => openModal(null));
+    });
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+
+    document.getElementById('matrixTableBody').addEventListener('click', (e) => {
+      const quickAdd = e.target.closest('[data-action="quick-add-category"]');
+      if (quickAdd) {
+        openModal(quickAdd.dataset.category);
+        return;
+      }
+      const gcalBtn = e.target.closest('[data-action="gcal-item"]');
+      if (gcalBtn) {
+        const item = state.monthsData[state.currentMonth].find(i => i.id === gcalBtn.dataset.id);
+        if (item) openGoogleCalendarForItem(item);
+        return;
+      }
+      const delBtn = e.target.closest('[data-action="delete-item"]');
+      if (delBtn) {
+        state.monthsData[state.currentMonth] = state.monthsData[state.currentMonth].filter(i => i.id !== delBtn.dataset.id);
+        renderAll();
+      }
+    });
+
+    modalCategorySelect.addEventListener('change', (e) => {
+      const isOtros = e.target.value === 'Otros';
+      customCategoryWrapper.classList.toggle('hidden', !isOtros);
+      document.getElementById('customCategoryInput').required = isOtros;
+    });
+
+    document.querySelectorAll('input[name="flowType"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.value === 'income') {
+          modalCategorySelect.value = 'Ingresos Extras';
+          customCategoryWrapper.classList.add('hidden');
+        } else if (modalCategorySelect.value === 'Ingresos Extras') {
+          modalCategorySelect.value = 'Gastos Fijos Obligatorios';
+        }
+      });
+    });
+
+    document.getElementById('addConceptForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const flowType = document.querySelector('input[name="flowType"]:checked').value;
+      const category = modalCategorySelect.value;
+      const customCategory = document.getElementById('customCategoryInput').value.trim();
+      const name = document.getElementById('subconceptNameInput').value.trim();
+      const baseAmount = Math.max(0, Number(document.getElementById('subconceptAmountInput').value) || 0);
+      const targetPeriod = document.getElementById('subconceptTargetPeriod').value;
+      if (!name) return;
+
+      const periods = [
+        { amount: 0, status: 'pending' },
+        { amount: 0, status: 'pending' },
+        { amount: 0, status: 'pending' },
+        { amount: 0, status: 'pending' }
+      ];
+
+      if (targetPeriod === 'all_split') {
+        const splitVal = Math.round(baseAmount / 4);
+        periods.forEach(p => p.amount = splitVal);
+      } else if (targetPeriod === 'all_repeat') {
+        periods.forEach(p => p.amount = baseAmount);
+      } else {
+        const idx = Number(targetPeriod) || 0;
+        if (periods[idx]) periods[idx].amount = baseAmount;
+      }
+
+      state.monthsData[state.currentMonth].push({
+        id: 'c-' + Date.now().toString(36),
+        category,
+        customCategory: category === 'Otros' ? (customCategory || 'Personalizado') : '',
+        name,
+        type: flowType === 'income' || category === 'Ingresos Extras' ? 'income' : 'expense',
+        periods
+      });
+
+      closeModal();
+      state.activeScreen = 'schedule';
+      renderAll();
+    });
+
+    // Export CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      const items = state.monthsData[state.currentMonth] || [];
+      const headers = ['Categoria', 'Personalizada', 'Subconcepto', 'Tipo', 'S1 Monto', 'S1 Estatus', 'S2 Monto', 'S2 Estatus', 'S3 Monto', 'S3 Estatus', 'S4 Monto', 'S4 Estatus', 'Total Mes'];
+      const rows = items.map(item => {
+        const total = item.periods.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+        return [
+          `"${item.category}"`,
+          `"${item.customCategory || ''}"`,
+          `"${item.name.replace(/"/g, '""')}"`,
+          item.type === 'income' ? 'Ingreso Extra' : 'Egreso',
+          item.periods[0]?.amount || 0, item.periods[0]?.status || 'pending',
+          item.periods[1]?.amount || 0, item.periods[1]?.status || 'pending',
+          item.periods[2]?.amount || 0, item.periods[2]?.status || 'pending',
+          item.periods[3]?.amount || 0, item.periods[3]?.status || 'pending',
+          total
+        ].join(',');
+      });
+      const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FINCTRL_${state.currentMonth}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Export JSON
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `FINCTRL_Presupuesto_${state.currentMonth}.json`;
+      a.click();
+    });
+
+    // Reset
+    document.getElementById('resetDemoBtn').addEventListener('click', () => {
+      if (confirm('¿Deseas reiniciar todos los conceptos en cero?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        state = getInitialState();
+        renderAll();
+      }
+    });
+
+    // Boot
+    renderAll();
+    initSupabaseFromSaved();
+  </script>
+</body>
+</html>

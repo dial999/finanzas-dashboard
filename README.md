@@ -5,7 +5,6 @@
   <img src="https://img.shields.io/badge/stack-HTML5%20%7C%20TailwindCSS%20%7C%20Vanilla%20JS-3b82f6?style=flat-square" alt="Stack" />
   <img src="https://img.shields.io/badge/database-LocalStorage%20%2B%20Supabase%20PostgreSQL-059669?style=flat-square" alt="Base de Datos" />
   <img src="https://img.shields.io/badge/integraci%C3%B3n-Google%20Calendar%20API%20%26%20ICS-2563eb?style=flat-square" alt="Calendario" />
-  <img src="https://img.shields.io/badge/licencia-MIT-64748b?style=flat-square" alt="Licencia" />
 </p>
 
 > Aplicación web interactiva para el control de presupuesto, dispersión de nómina y programación de pagos personales, desarrollada con HTML5, Tailwind CSS, JavaScript moderno y persistencia en PostgreSQL (Supabase).
@@ -101,10 +100,6 @@ Invoke-Item .\index.html
 ## Créditos y Autoría
 
 - **Autora y Diseño del Sistema**: **Diana Lorena Muñoz Ramos** (2026).
-
-## Licencia
-
-Este proyecto es de uso personal y se distribuye bajo la licencia **MIT**.
 
 ---
 
